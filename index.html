@@ -59,8 +59,11 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC',sans-seri
 .an-hist-macros{font-size:9px;font-family:'Roboto Mono',monospace;color:var(--muted);}
 .an-hist-body{display:none;padding:8px 14px 12px;}
 .an-hist-body.open{display:block;}
-.an-hist-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:11px;font-family:'Roboto Mono',monospace;}
+.an-hist-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);font-size:11px;font-family:'Roboto Mono',monospace;}
 .an-hist-row:last-child{border-bottom:none;}
+.an-hist-row .ahr-name{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:'Noto Sans TC',sans-serif;}
+.an-hist-row .ahr-macro{flex:0 0 auto;width:48px;text-align:right;}
+@media(max-width:560px){.an-hist-row{flex-wrap:wrap;}.an-hist-row .ahr-name{flex:1 0 100%;margin-bottom:2px;}.an-hist-row .ahr-macro{width:auto;flex:1;text-align:left;}}
 .an-corr-row{display:grid;grid-template-columns:100px 70px 70px 70px 1fr;gap:6px;padding:7px 0;border-bottom:1px solid var(--border);font-size:10px;font-family:'Roboto Mono',monospace;align-items:center;}
 .corr-pos{color:var(--red);}
 .corr-neg{color:var(--green);}
@@ -111,6 +114,7 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC',sans-seri
 .stat-lbl{font-size:9px;letter-spacing:3px;color:var(--muted);font-family:'Roboto Mono',monospace;text-transform:uppercase;margin-bottom:8px;}
 .stat-val{font-family:'Bebas Neue',sans-serif;font-size:44px;line-height:1;}
 .stat-unit{font-size:16px;color:var(--muted);font-family:'Noto Sans TC',sans-serif;font-weight:300;}
+.stat-sub{font-size:9px;letter-spacing:1px;color:var(--accent3);font-family:'Roboto Mono',monospace;margin-top:6px;}
 .c-y{color:var(--accent);} .c-r{color:var(--accent2);} .c-b{color:var(--accent3);} .c-g{color:var(--green);}
 
 /* PHASES */
@@ -120,8 +124,11 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC',sans-seri
 .col-title::before{content:'';display:block;width:4px;height:26px;background:var(--accent);}
 .col-sub{font-size:10px;font-family:'Roboto Mono',monospace;color:var(--muted);letter-spacing:2px;margin-bottom:24px;padding-left:14px;}
 
-.phase{margin-bottom:4px;border:1px solid var(--border);overflow:hidden;transition:border-color .2s;}
+.phase{margin-bottom:4px;border:1px solid var(--border);overflow:hidden;transition:border-color .2s;position:relative;}
 .phase:hover{border-color:rgba(232,255,0,.3);}
+.phase.current{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),0 0 24px rgba(232,255,0,.12);}
+.phase.current .ph-head{background:linear-gradient(90deg,rgba(232,255,0,.10),var(--surface) 70%);}
+.phase-now{position:absolute;top:0;right:0;background:var(--accent);color:#000;font-family:'Roboto Mono',monospace;font-size:9px;font-weight:700;letter-spacing:1px;padding:3px 10px;border-bottom-left-radius:4px;z-index:2;}
 .ph-head{display:grid;grid-template-columns:100px 1fr auto;align-items:center;padding:14px 18px;background:var(--surface);gap:14px;}
 .ph-num{font-family:'Bebas Neue',sans-serif;font-size:34px;color:var(--accent);line-height:1;}
 .ph-date{font-size:10px;font-family:'Roboto Mono',monospace;color:var(--muted);letter-spacing:1px;}
@@ -550,9 +557,9 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC',sans-seri
 
   <!-- STATS -->
   <div class="stats-strip">
-    <div class="stat-cell"><div class="stat-lbl">目前體重</div><div class="stat-val">83.7 <span class="stat-unit">kg</span></div></div>
+    <div class="stat-cell"><div class="stat-lbl">目前體重</div><div class="stat-val"><span id="planCurWeight">83.7</span> <span class="stat-unit">kg</span></div><div class="stat-sub" id="planCurDate"></div></div>
     <div class="stat-cell"><div class="stat-lbl">目標體重</div><div class="stat-val c-y">79.1 <span class="stat-unit">kg</span></div></div>
-    <div class="stat-cell"><div class="stat-lbl">需減脂肪</div><div class="stat-val c-r">4.6 <span class="stat-unit">kg</span></div></div>
+    <div class="stat-cell"><div class="stat-lbl">距目標</div><div class="stat-val c-r"><span id="planToLose">4.6</span> <span class="stat-unit">kg</span></div></div>
     <div class="stat-cell"><div class="stat-lbl">InBody 評分</div><div class="stat-val c-b">92 <span class="stat-unit">/100</span></div></div>
     <div class="stat-cell"><div class="stat-lbl">骨骼肌</div><div class="stat-val c-g">39.8 <span class="stat-unit">kg</span></div></div>
   </div>
@@ -564,7 +571,7 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC',sans-seri
         <div class="col-title">週進度計畫</div>
         <div class="col-sub">// 2026.05.30 → 2026.08.03 ／ 9 WEEKS ／ PROFESSIONAL CUT PROTOCOL</div>
 
-        <div class="phase">
+        <div class="phase" id="phase-0">
           <div class="ph-head">
             <div class="ph-num">W1—2</div>
             <div class="ph-info"><div class="ph-date">05.30 — 06.13</div><h3>適應期 ADAPTATION</h3><span class="ph-tag tag-cut">MODERATE CUT</span></div>
@@ -576,7 +583,7 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC',sans-seri
           </div>
         </div>
 
-        <div class="phase">
+        <div class="phase" id="phase-1">
           <div class="ph-head">
             <div class="ph-num">W3—5</div>
             <div class="ph-info"><div class="ph-date">06.14 — 07.05</div><h3>主力減脂期 DEEP CUT</h3><span class="ph-tag tag-deep">AGGRESSIVE CUT</span></div>
@@ -588,7 +595,7 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC',sans-seri
           </div>
         </div>
 
-        <div class="phase">
+        <div class="phase" id="phase-2">
           <div class="ph-head">
             <div class="ph-num">W6—7</div>
             <div class="ph-info"><div class="ph-date">07.06 — 07.19</div><h3>強化期 INTENSIFY</h3><span class="ph-tag tag-deep">AGGRESSIVE CUT</span></div>
@@ -600,7 +607,7 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC',sans-seri
           </div>
         </div>
 
-        <div class="phase">
+        <div class="phase" id="phase-3">
           <div class="ph-head">
             <div class="ph-num">W8—9</div>
             <div class="ph-info"><div class="ph-date">07.20 — 08.03</div><h3>衝刺收尾 PEAK WEEK</h3><span class="ph-tag tag-peak">FINAL PUSH</span></div>
@@ -1063,6 +1070,42 @@ function updatePlanProgress(){
   document.getElementById('planProgress').style.width=pct+'%';
 }
 
+// 作戰計畫頂部：目前體重連動最新紀錄 + 標註目前所在區間
+function renderPlanLive(){
+  const latest=entries.length?entries[entries.length-1]:null;
+  const cw=document.getElementById('planCurWeight');
+  const cd=document.getElementById('planCurDate');
+  const tl=document.getElementById('planToLose');
+  if(latest){
+    if(cw) cw.textContent=latest.weight;
+    if(cd) cd.textContent='更新於 '+latest.date.slice(5).replace('-','/');
+    if(tl){const rem=+(latest.weight-TARGET).toFixed(1);tl.textContent=(rem>0?rem:0).toFixed(1);}
+  } else {
+    if(cw) cw.textContent=START;
+    if(cd) cd.textContent='尚無紀錄';
+    if(tl) tl.textContent=(START-TARGET).toFixed(1);
+  }
+  highlightCurrentPhase();
+}
+function highlightCurrentPhase(){
+  const today=todayStr();
+  let curIdx=PHASE_TARGETS.findIndex(ph=>today<=ph.end);
+  if(curIdx<0) curIdx=PHASE_TARGETS.length-1; // 計畫結束後停在最後一期
+  PHASE_TARGETS.forEach((ph,i)=>{
+    const el=document.getElementById('phase-'+i);
+    if(!el) return;
+    el.classList.toggle('current',i===curIdx);
+    const badge=el.querySelector('.phase-now');
+    if(i===curIdx&&!badge){
+      const b=document.createElement('div');
+      b.className='phase-now';b.textContent='◀ 你在這';
+      el.appendChild(b);
+    } else if(i!==curIdx&&badge){
+      badge.remove();
+    }
+  });
+}
+
 // ── ENTRIES ────────────────────────────────────────────────────────────────
 function addEntry(){
   const date=document.getElementById('logDate').value;
@@ -1381,6 +1424,7 @@ function updateTracker(){
   const daysLeft=Math.max(0,Math.round((new Date(END_DATE)-new Date())/86400000));
   document.getElementById('qs-days').textContent=daysLeft;
   renderLog();
+  renderPlanLive();
 }
 function updatePhase(){
   const w=Math.ceil((new Date()-new Date(START_DATE))/604800000);
@@ -2417,9 +2461,11 @@ function renderFoodHistory(dates){
     const tot=getDayTotals(date);
     const rows=foods.map(f=>`
       <div class="an-hist-row">
-        <span>${f.name}${f.qty&&f.qty!==1?` ×${f.qty}`:''}</span>
-        <span style="color:var(--accent)">${f.kcal}kcal</span>
-        <span style="color:#ff6b6b">${f.p}g蛋白</span>
+        <span class="ahr-name">${f.name}${f.qty&&f.qty!==1?` ×${f.qty}`:''}</span>
+        <span style="color:var(--accent)">${f.kcal||0}kcal</span>
+        <span class="ahr-macro" style="color:#ff6b6b">P ${f.p||0}g</span>
+        <span class="ahr-macro" style="color:var(--muted)">C ${f.c||0}g</span>
+        <span class="ahr-macro" style="color:var(--accent3)">F ${f.f||0}g</span>
       </div>`).join('');
     return `<div class="an-hist-day">
       <div class="an-hist-head" onclick="this.nextElementSibling.classList.toggle('open')">
