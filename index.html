@@ -2017,6 +2017,14 @@ function mergeCloudData(data){
       });
       localStorage.setItem('foodlog_v1',JSON.stringify(foodLog));
     }
+    if(Array.isArray(data.customFoodDB)){
+      // 合併自訂食物庫（union by name，不覆蓋本地新增的項目）
+      const cloudNames=new Set(data.customFoodDB.map(f=>f.name));
+      const localOnly=customFoodDB.filter(f=>!cloudNames.has(f.name));
+      customFoodDB=[...data.customFoodDB,...localOnly];
+      localStorage.setItem('custom_food_db',JSON.stringify(customFoodDB));
+      renderCustomDbList();
+    }
     // 強制覆蓋（9999...）時 localTs 存真實時間，不存 9999...，防止下次卡死
     localTs=forceOverride?Date.now():data.ts;
     localStorage.setItem('bodycut_local_ts',String(localTs));
@@ -2055,7 +2063,7 @@ async function pushToCloud(){
   const id=getSyncId();
   localTs=Date.now(); // 永遠用真實時間，不用 9999...
   localStorage.setItem('bodycut_local_ts',String(localTs));
-  const payload={entries,foodLog,ts:localTs,deviceId:DEVICE_ID};
+  const payload={entries,foodLog,customFoodDB,ts:localTs,deviceId:DEVICE_ID};
   try{
     await fetch(`${FB}/users/${id}.json`,{
       method:'PUT',
