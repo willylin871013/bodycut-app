@@ -584,7 +584,7 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC',sans-seri
           </div>
           <div class="ph-body">
             <div class="ph-col"><h4>訓練安排</h4><ul><li>重訓 5次/週（推拉腿分化）</li><li>HIIT 20分鐘 × 2次/週</li><li>低強度有氧 40分鐘 × 2次/週</li><li>每週減重目標：0.7 kg</li><li>步數目標：每天 10,000 步</li></ul></div>
-            <div class="ph-col"><h4>飲食策略</h4><ul><li>熱量：<strong style="color:var(--accent)">2,100 kcal</strong>（赤字 -810）</li><li>蛋白質：維持 180–190g</li><li>每週一次 Refeed Day 2,600 kcal</li><li>避免果糖、精緻糖，碳水選糙米地瓜</li><li>睡前蛋白質（酪蛋白/雞胸）</li></ul></div>
+            <div class="ph-col"><h4>飲食策略</h4><ul><li><strong style="color:var(--accent)">▲ 高碳日（訓練）：2,250 kcal</strong>　碳水 150g ／ 蛋白 185g ／ 脂肪 101g</li><li><strong style="color:var(--accent3)">▼ 低碳日（休息）：1,950 kcal</strong>　碳水 60g ／ 蛋白 185g ／ 脂肪 108g</li><li>每週平均熱量 2,100 kcal（赤字 -810），從 6/22 起高低碳交替</li><li>低碳日脂肪來源：酪梨、堅果、橄欖油、雞蛋，維持飽足感</li><li>避免果糖、精緻糖，碳水選糙米地瓜；睡前蛋白質（雞胸）</li></ul></div>
           </div>
         </div>
 
@@ -935,6 +935,7 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC',sans-seri
         <h2>飲食日誌</h2>
         <div style="display:flex;gap:6px;align-items:center;">
           <div class="fl-phase-tag" id="flPhaseTag">—</div>
+          <div class="fl-phase-tag" id="flCarbDayTag" style="display:none;font-weight:700;"></div>
           <div class="fl-phase-tag" id="flTodayTag" style="border-color:rgba(0,212,255,.3);color:var(--accent3);">今日</div>
         </div>
       </div>
@@ -1638,13 +1639,36 @@ function flMobSwitch(tab, el){
 }
 
 // ── FOOD LOG ───────────────────────────────────────────────────────────────
+const CARB_CYCLE_START='2026-06-22'; // 6/22 = 高碳日，隔日交替
+function getCarbDayType(dateStr){
+  const ref=new Date(CARB_CYCLE_START+'T00:00:00');
+  const d=new Date((dateStr||todayStr())+'T00:00:00');
+  const diff=Math.round((d-ref)/(1000*60*60*24));
+  return diff%2===0?'high':'low';
+}
 const PHASE_TARGETS=[
   {end:'2026-06-13',kcal:2250,p:184,c:191,f:83,name:'W1-2 適應期'},
-  {end:'2026-07-05',kcal:2100,p:185,c:175,f:73,name:'W3-5 主力減脂'},
-  {end:'2026-07-19',kcal:2050,p:185,c:165,f:72,name:'W6-7 強化期'},
+  {end:'2026-07-05',kcal:2100,p:185,c:175,f:73,name:'W3-5 主力減脂',
+    high:{kcal:2250,p:185,c:150,f:101},low:{kcal:1950,p:185,c:60,f:108}},
+  {end:'2026-07-19',kcal:2050,p:185,c:165,f:72,name:'W6-7 強化期',
+    high:{kcal:2200,p:185,c:150,f:96},low:{kcal:1900,p:185,c:60,f:102}},
   {end:'2026-08-03',kcal:2000,p:200,c:155,f:64,name:'W8-9 衝刺'},
 ];
-function getTarget(){const now=new Date();for(const ph of PHASE_TARGETS)if(now<=new Date(ph.end))return ph;return PHASE_TARGETS[PHASE_TARGETS.length-1];}
+function getTarget(dateStr){
+  const ds=dateStr||todayStr();
+  const d=new Date(ds+'T00:00:00');
+  for(const ph of PHASE_TARGETS){
+    if(d<=new Date(ph.end+'T23:59:59')){
+      if(ph.high&&ph.low){
+        const type=getCarbDayType(ds);
+        const m=type==='high'?ph.high:ph.low;
+        return {kcal:m.kcal,p:m.p,c:m.c,f:m.f,name:ph.name,carbDay:type};
+      }
+      return ph;
+    }
+  }
+  return PHASE_TARGETS[PHASE_TARGETS.length-1];
+}
 
 const SEVEN_DB=[
   // 御飯糰
@@ -1825,6 +1849,23 @@ function deleteFoodItem(date,ts){
 function renderFoodPage(){
   const tgt=getTarget();
   document.getElementById('flPhaseTag').textContent=tgt.name;
+  const carbTag=document.getElementById('flCarbDayTag');
+  if(carbTag){
+    if(tgt.carbDay){
+      carbTag.style.display='';
+      if(tgt.carbDay==='high'){
+        carbTag.textContent='▲ 高碳日 '+tgt.c+'g';
+        carbTag.style.borderColor='rgba(232,255,0,.4)';
+        carbTag.style.color='var(--accent)';
+      } else {
+        carbTag.textContent='▼ 低碳日 '+tgt.c+'g';
+        carbTag.style.borderColor='rgba(0,212,255,.4)';
+        carbTag.style.color='var(--accent3)';
+      }
+    } else {
+      carbTag.style.display='none';
+    }
+  }
   // 顯示今天日期
   const today=todayStr();
   const todayTag=document.getElementById('flTodayTag');
