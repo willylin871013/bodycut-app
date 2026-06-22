@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BODY CUT — 減脂作戰計畫</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+TC:wght@300;400;500;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#080808;--surface:#111;--surface2:#181818;--border:#222;--accent:#e8ff00;--accent2:#ff4d00;--accent3:#00d4ff;--red:#ff4d4d;--green:#00ff88;--text:#f0f0f0;--muted:#555;--muted2:#888;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC',sans-serif;min-height:100vh;overflow-x:hidden;}
+
+/* ── SETUP SCREEN ── */
+.setup-screen{position:fixed;inset:0;background:var(--bg);z-index:200;display:flex;align-items:center;justify-content:center;}
+.setup-box{width:480px;border:1px solid var(--border);padding:40px;background:var(--surface);}
+.setup-logo{font-family:'Bebas Neue',sans-serif;font-size:48px;letter-spacing:4px;color:var(--accent);margin-bottom:6px;}
+.setup-sub{font-size:10px;font-family:'Roboto Mono',monospace;color:var(--muted);letter-spacing:3px;margin-bottom:32px;}
+.setup-step{margin-bottom:20px;}
+.setup-step-num{font-family:'Bebas Neue',sans-serif;font-size:13px;color:var(--accent2);letter-spacing:2px;margin-bottom:6px;}
+.setup-step p{font-size:12px;color:#bbb;line-height:1.7;margin-bottom:10px;}
+.setup-step a{color:var(--accent3);text-decoration:none;border-bottom:1px solid rgba(0,212,255,.3);}
+.setup-input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:12px 14px;font-size:13px;font-family:'Roboto Mono',monospace;outline:none;border-radius:2px;}
+.setup-input:focus{border-color:var(--accent);}
+.setup-input::placeholder{color:var(--muted);}
+.btn-setup{width:100%;margin-top:24px;padding:14px;background:var(--accent);color:#000;border:none;font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:3px;cursor:pointer;border-radius:2px;}
+.btn-setup:hover{opacity:.9;}
+.setup-err{margin-top:12px;padding:10px 14px;background:rgba(255,77,77,.1);border:1px solid rgba(255,77,77,.3);font-size:11px;font-family:'Roboto Mono',monospace;color:var(--red);display:none;border-radius:2px;}
+
+/* ── NAV ── */
+.nav{display:flex;align-items:stretch;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:50;}
+.nav-logo{padding:0 24px;display:flex;align-items:center;border-right:1px solid var(--border);gap:10px;}
+.nav-logo .lt{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:3px;color:var(--accent);}
+.nav-logo .ls{font-family:'Roboto Mono',monospace;font-size:8px;color:var(--muted);letter-spacing:2px;}
+.nav-tabs{display:flex;}
+.nav-tab{padding:0 24px;font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:3px;color:var(--muted);cursor:pointer;border:none;background:transparent;border-right:1px solid var(--border);height:52px;display:flex;align-items:center;transition:all .2s;text-transform:uppercase;position:relative;}
+.nav-tab::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--accent);transform:scaleX(0);transition:transform .2s;}
+.nav-tab.active{color:var(--accent);}
+.nav-tab.active::after{transform:scaleX(1);}
+.nav-tab:hover:not(.active){color:var(--text);}
+.nav-badge{margin-left:6px;background:var(--accent);color:#000;font-size:9px;padding:1px 5px;border-radius:10px;}
+.nav-sync{margin-left:auto;display:flex;align-items:center;padding:0 20px;gap:8px;font-size:9px;font-family:'Roboto Mono',monospace;color:var(--muted);letter-spacing:2px;border-left:1px solid var(--border);}
+.sync-dot{width:6px;height:6px;border-radius:50%;background:var(--muted);}
+.sync-dot.ok{background:var(--green);}
+.sync-dot.syncing{background:var(--accent);animation:pulse .8s infinite;}
+.sync-dot.err{background:var(--red);}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+
+/* ── PAGES ── */
+.page{display:none;}.page.active{display:block;}
+
+/* ════ PLAN PAGE ════ */
+.plan-hero{padding:40px 36px 28px;border-bottom:1px solid var(--border);position:relative;overflow:hidden;}
+.plan-hero::before{content:'CUT';position:absolute;right:-10px;top:-20px;font-family:'Bebas Neue',sans-serif;font-size:240px;color:rgba(232,255,0,0.03);line-height:1;pointer-events:none;}
+.hero-tag{font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:4px;color:var(--accent);margin-bottom:10px;}
+.hero-h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(48px,8vw,96px);line-height:.9;letter-spacing:2px;}
+.hero-h1 span{color:var(--accent);}
+.hero-sub{margin-top:14px;font-size:11px;color:var(--muted);font-family:'Roboto Mono',monospace;letter-spacing:1px;}
+.stats-strip{display:grid;grid-template-columns:repeat(5,1fr);border-bottom:1px solid var(--border);}
+.stat-cell{padding:20px 24px;border-right:1px solid var(--border);}
+.stat-cell:last-child{border-right:none;}
+.stat-lbl{font-size:9px;letter-spacing:3px;color:var(--muted);font-family:'Roboto Mono',monospace;text-transform:uppercase;margin-bottom:6px;}
+.stat-val{font-family:'Bebas Neue',sans-serif;font-size:40px;line-height:1;}
+.stat-unit{font-size:14px;color:var(--muted);font-family:'Noto Sans TC',sans-serif;font-weight:300;}
+.c-y{color:var(--accent);}.c-r{color:var(--accent2);}.c-b{color:var(--accent3);}.c-g{color:var(--green);}
+.plan-body{display:grid;grid-template-columns:1fr 380px;}
+.phases-col{padding:28px;border-right:1px solid var(--border);}
+.col-title{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;margin-bottom:4px;display:flex;align-items:center;gap:10px;}
+.col-title::before{content:'';display:block;width:4px;height:24px;background:var(--accent);}
+.col-sub{font-size:9px;font-family:'Roboto Mono',monospace;color:var(--muted);letter-spacing:2px;margin-bottom:20px;padding-left:14px;}
+.phase{margin-bottom:3px;border:1px solid var(--border);overflow:hidden;transition:border-color .2s;animation:fadeUp .4s ease forwards;opacity:0;}
+.phase:nth-child(1){animation-delay:.05s;}.phase:nth-child(2){animation-delay:.12s;}.phase:nth-child(3){animation-delay:.19s;}.phase:nth-child(4){animation-delay:.26s;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+.phase:hover{border-color:rgba(232,255,0,.3);}
+.ph-head{display:grid;grid-template-columns:90px 1fr auto;align-items:center;padding:12px 16px;background:var(--surface);gap:12px;}
+.ph-num{font-family:'Bebas Neue',sans-serif;font-size:30px;color:var(--accent);line-height:1;}
+.ph-date{font-size:9px;font-family:'Roboto Mono',monospace;color:var(--muted);letter-spacing:1px;}
+.ph-info h3{font-size:13px;font-weight:700;letter-spacing:1px;margin-bottom:3px;}
+.ph-tag{display:inline-block;padding:2px 8px;font-size:8px;letter-spacing:2px;font-family:'Roboto Mono',monospace;border:1px solid;text-transform:uppercase;}
+.tag-cut{border-color:var(--accent2);color:var(--accent2);}.tag-deep{border-color:var(--accent);color:var(--accent);}.tag-peak{border-color:var(--accent3);color:var(--accent3);}
+.ph-target .tw{font-family:'Bebas Neue',sans-serif;font-size:28px;line-height:1;text-align:right;}
+.ph-target .tw-lbl{font-size:8px;color:var(--muted);font-family:'Roboto Mono',monospace;letter-spacing:1px;text-align:right;}
+.ph-body{padding:0 16px 16px;background:var(--surface2);display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.ph-col h4{font-size:8px;letter-spacing:3px;color:var(--muted);font-family:'Roboto Mono',monospace;padding:12px 0 7px;border-bottom:1px solid var(--border);margin-bottom:7px;}
+.ph-col ul{list-style:none;}
+.ph-col ul li{font-size:11px;color:#bbb;padding:3px 0 3px 12px;position:relative;line-height:1.5;}
+.ph-col ul li::before{content:'▸';position:absolute;left:0;color:var(--accent);font-size:9px;}
+.prog-track{margin:0 28px 3px;padding:14px 18px;background:var(--surface);border:1px solid var(--border);}
+.prog-lbl{display:flex;justify-content:space-between;font-size:9px;font-family:'Roboto Mono',monospace;color:var(--muted);letter-spacing:1px;margin-bottom:7px;}
+.prog-bg{height:4px;background:var(--border);}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent));transition:width .6s;}
+.prog-miles{display:flex;justify-content:space-between;margin-top:5px;font-size:8px;font-family:'Roboto Mono',monospace;color:var(--muted);}
+.plan-chart-wrap{margin:3px 28px 28px;background:var(--surface);border:1px solid var(--border);padding:18px;}
+.plan-chart-ttl{font-size:9px;letter-spacing:3px;font-family:'Roboto Mono',monospace;color:var(--muted);margin-bottom:12px;}
+.sidebar-col{padding:28px 24px;}
+.cal-card,.rules-card,.refeed-card,.supp-card{border:1px solid var(--border);padding:20px;margin-bottom:3px;}
+.card-ttl{font-size:9px;letter-spacing:3px;color:var(--muted);font-family:'Roboto Mono',monospace;text-transform:uppercase;margin-bottom:12px;padding-bottom:9px;border-bottom:1px solid var(--border);}
+.cal-big{font-family:'Bebas Neue',sans-serif;font-size:58px;line-height:1;color:var(--accent);}
+.cal-unit{font-size:12px;color:var(--muted);font-family:'Roboto Mono',monospace;margin-bottom:14px;}
+.deficit-box{padding:9px 11px;background:var(--bg);border-left:3px solid var(--accent2);margin-bottom:12px;}
+.deficit-box .dl{font-size:8px;font-family:'Roboto Mono',monospace;color:var(--muted);letter-spacing:2px;margin-bottom:3px;}
+.deficit-box .dv{font-family:'Bebas Neue',sans-serif;font-size:22px;}
+.deficit-box .ds{font-size:9px;font-family:'Roboto Mono',monospace;color:var(--muted);margin-top:2px;}
+.macro-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);}
+.macro-row:last-child{border-bottom:none;}
+.macro-nm{font-size:10px;color:var(--muted);font-family:'Roboto Mono',monospace;letter-spacing:1px;}
+.macro-v{font-family:'Bebas Neue',sans-serif;font-size:24px;line-height:1;}
+.macro-g{font-size:9px;color:var(--muted);font-family:'Roboto Mono',monospace;}
+.macro-bar{height:2px;background:var(--border);margin-top:3px;}
+.macro-fill{height:100%;}
+.m-p{color:#ff6b6b;}.m-c{color:var(--accent);}.m-f{color:var(--accent3);}
+.fill-p{background:#ff6b6b;width:40%;}.fill-c{background:var(--accent);width:35%;}.fill-f{background:var(--accent3);width:25%;}
+.refeed-card{border-color:rgba(0,212,255,.2);}
+.refeed-card .card-ttl{color:var(--accent3);}
+.refeed-card p{font-size:11px;color:#bbb;line-height:1.8;}
+.refeed-card strong{color:var(--accent3);}
+.rules-card{border-left:3px solid var(--accent);}
+.rules-card h3{font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:2px;margin-bottom:12px;color:var(--accent);}
+.rule-item{display:flex;gap:9px;padding:6px 0;border-bottom:1px solid var(--border);font-size:11px;color:#bbb;line-height:1.5;}
+.rule-item:last-child{border-bottom:none;}
+.rule-n{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--accent);line-height:1;min-width:18px;}
+.supp-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
+.supp-item{font-size:11px;color:#bbb;padding:7px 9px;background:var(--bg);}
+.supp-item strong{display:block;margin-bottom:2px;}
+.supp-item span{font-size:9px;color:var(--muted);font-family:'Roboto Mono',monospace;}
+.plan-footer{border-top:1px solid var(--border);padding:14px 28px;display:flex;justify-content:space-between;font-size:9px;font-family:'Roboto Mono',monospace;color:var(--muted);letter-spacing:2px;}
+.plan-footer span{color:var(--accent);}
+
+/* ════ TRACKER PAGE ════ */
+.tracker-wrap{display:grid;grid-template-columns:300px 1fr;min-height:calc(100vh - 52px);}
+.tr-sidebar{background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;}
+.tr-sb-head{padding:20px 20px 14px;border-bottom:1px solid var(--border);}
+.tr-sb-head .sh-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--accent);}
+.tr-sb-head .sh-sub{font-size:8px;font-family:'Roboto Mono',monospace;color:var(--muted);letter-spacing:2px;margin-top:3px;}
+.phase-status{padding:12px 20px;border-bottom:1px solid var(--border);}
+.ps-label{font-size:8px;font-family:'Roboto Mono',monospace;color:var(--muted);letter-spacing:3px;margin-bottom:5px;}
+.ps-name{font-size:11px;font-weight:700;color:var(--accent);margin-bottom:7px;}
+.ps-bg{height:3px;background:var(--border);}
+.ps-fill{height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent));transition:width .5s;}
+.ps-info{display:flex;justify-content:space-between;font-size:8px;font-family:'Roboto Mono',monospace;color:var(--muted);margin-top:4px;}
+.inp-section{padding:16px 20px;border-bottom:1px solid var(--border);}
+.inp-title{font-size:8px;font-family:'Roboto Mono',monospace;color:var(--muted);letter-spacing:3px;text-transform:uppercase;margin-bottom:10px;}
+.inp-row{margin-bottom:9px;}
+.inp-row label{display:block;font-size:9px;color:var(--muted2);font-family:'Roboto Mono',monospace;letter-spacing:1px;margin-bottom:4px;}
+.inp-row input[type="date"],.inp-row input[type="number"],.inp-row textarea{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px 10px;font-size:13px;font-family:'Roboto Mono',monospace;outline:none;transition:border-color .2s;border-radius:2px;}
+.inp-row input:focus,.inp-row textarea:focus{border-color:var(--accent);}
+.inp-row textarea{resize:vertical;min-height:46px;font-size:11px;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.btn-log{width:100%;padding:10px;background:var(--accent);color:#000;border:none;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;cursor:pointer;transition:opacity .2s;border-radius:2px;}
+.btn-log:hover{opacity:.9;}
+.btn-log:disabled{opacity:.5;cursor:not-allowed;}
+.up-section{padding:16px 20px;border-bottom:1px solid var(--border);}
+.up-zone{border:1px dashed var(--border);padding:16px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;border-radius:2px;position:relative;}
+.up-zone:hover{border-color:var(--accent3);background:rgba(0,212,255,.03);}
+.up-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.up-icon{font-size:22px;margin-bottom:5px;}
+.up-text{font-size:9px;color:var(--muted2);font-family:'Roboto Mono',monospace;letter-spacing:1px;}
+.up-text strong{color:var(--accent3);}
+.btn-analyze{width:100%;margin-top:7px;padding:8px;background:transparent;border:1px solid var(--accent3);color:var(--accent3);font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;cursor:pointer;transition:background .2s;border-radius:2px;}
+.btn-analyze:hover{background:rgba(0,212,255,.08);}
+.btn-analyze:disabled{opacity:.35;cursor:not-allowed;}
+.ai-box{margin-top:9px;padding:10px;background:rgba(0,212,255,.05);border:1px solid rgba(0,212,255,.2);border-radius:2px;font-size:10px;color:#bbb;font-family:'Roboto Mono',monospace;line-height:1.7;display:none;}
+.ai-box.show{display:block;}
+.ai-lbl{color:var(--accent3);font-size:8px;letter-spacing:3px;margin-bottom:7px;}
+.btn-import{margin-top:7px;width:100%;padding:7px;background:var(--accent3);color:#000;border:none;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:2px;cursor:pointer;border-radius:2px;}
+.qs-grid{padding:12px 20px;margin-top:auto;border-top:1px solid var(--border);display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.qs{text-align:center;}
+.qs-v{font-family:'Bebas Neue',sans-serif;font-size:24px;line-height:1;}
+.qs-l{font-size:8px;font-family:'Roboto Mono',monospace;color:var(--muted);letter-spacing:2px;margin-top:1px;}
+.tr-main{overflow-y:auto;}
+.tr-main-head{padding:20px 24px 12px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+.tr-main-head h2{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;}
+.tab-row{display:flex;gap:3px;}
+.ttab{padding:6px 14px;font-size:9px;font-family:'Roboto Mono',monospace;letter-spacing:2px;cursor:pointer;border:1px solid var(--border);color:var(--muted2);transition:all .2s;background:transparent;border-radius:2px;}
+.ttab.active{border-color:var(--accent);color:var(--accent);background:rgba(232,255,0,.04);}
+.ttab:hover:not(.active){color:var(--text);}
+.tc-row{display:grid;grid-template-columns:repeat(4,1fr);gap:3px;padding:14px 24px 3px;}
+.tc{background:var(--surface);border:1px solid var(--border);padding:12px 14px;border-radius:2px;}
+.tc-l{font-size:8px;font-family:'Roboto Mono',monospace;color:var(--muted);letter-spacing:2px;margin-bottom:4px;}
+.tc-v{font-family:'Bebas Neue',sans-serif;font-size:28px;line-height:1;}
+.tc-s{font-size:8px;color:var(--muted);font-family:'Roboto Mono',monospace;margin-top:2px;}
+.chart-section{padding:14px 24px;}
+.chart-box{background:var(--surface);border:1px solid var(--border);padding:18px;border-radius:2px;}
+.chart-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+.chart-ttl{font-size:9px;font-family:'Roboto Mono',monospace;color:var(--muted);letter-spacing:3px;}
+.chart-legend{display:flex;gap:12px;font-size:9px;font-family:'Roboto Mono',monospace;color:var(--muted);}
+.leg-dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:4px;}
+#wChart{width:100%;height:190px;}
+.log-section{padding:0 24px 24px;}
+.log-head,.log-row-el{display:grid;grid-template-columns:100px 80px 70px 70px 1fr 70px;gap:6px;padding:9px 12px;}
+.log-head{font-size:8px;font-family:'Roboto Mono',monospace;color:var(--muted);letter-spacing:2px;border-bottom:1px solid var(--border);text-transform:uppercase;}
+.log-row-el{border-bottom:1px solid var(--border);font-size:11px;font-family:'Roboto Mono',monospace;align-items:center;transition:background .15s;}
+.log-row-el:hover{background:var(--surface);}
+.lr-date{color:var(--muted2);font-size:9px;}
+.lr-w{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--text);line-height:1;}
+.lr-up{color:var(--red);font-size:9px;}.lr-dn{color:var(--green);font-size:9px;}.lr-same{color:var(--muted);font-size:9px;}
+.lr-bf{color:var(--accent);}
+.lr-note{color:var(--muted2);font-size:9px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.badge{font-size:8px;padding:2px 6px;border:1px solid;border-radius:20px;text-align:center;}
+.b-manual{border-color:var(--muted);color:var(--muted);}.b-inbody{border-color:var(--accent3);color:var(--accent3);}
+.empty-st{padding:48px 24px;text-align:center;color:var(--muted);font-family:'Roboto Mono',monospace;font-size:10px;letter-spacing:2px;}
+.empty-st .big{font-family:'Bebas Neue',sans-serif;font-size:56px;color:var(--border);margin-bottom:9px;}
+
+/* ── LOADING / TOAST ── */
+.loading-ov{position:fixed;inset:0;background:rgba(8,8,8,.85);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:100;}
+.loading-ov.show{display:flex;}
+.spinner{width:34px;height:34px;border:2px solid var(--border);border-top-color:var(--accent3);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:12px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loading-tx{font-family:'Roboto Mono',monospace;font-size:10px;color:var(--accent3);letter-spacing:3px;}
+.toast{position:fixed;bottom:20px;right:20px;background:var(--surface);border:1px solid var(--accent);padding:9px 16px;font-size:10px;font-family:'Roboto Mono',monospace;color:var(--accent);letter-spacing:1px;z-index:300;transform:translateY(60px);opacity:0;transition:all .3s;border-radius:2px;}
+.toast.show{transform:translateY(0);opacity:1;}
+
+@media(max-width:900px){
+  .plan-body{grid-template-columns:1fr;}
+  .stats-strip{grid-template-columns:repeat(3,1fr);}
+  .tracker-wrap{grid-template-columns:1fr;}
+  .tc-row{grid-template-columns:1fr 1fr;}
+  .log-head,.log-row-el{grid-template-columns:90px 70px 60px 60px 1fr;}
+  .log-head>*:last-child,.log-row-el>*:last-child{display:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div class="loading-ov" id="loadingOv"><div class="spinner"></div><div class="loading-tx" id="loadingTx">處理中...</div></div>
+<div class="toast" id="toast"></div>
+
+<!-- ════ SETUP SCREEN ════ -->
+<div class="setup-screen" id="setupScreen">
+  <div class="setup-box">
+    <div class="setup-logo">BODY CUT</div>
+    <div class="setup-sub">// NOTION 雲端同步設定</div>
+
+    <div class="setup-step">
+      <div class="setup-step-num">STEP 01 — 建立 Notion Integration</div>
+      <p>前往 <a href="https://www.notion.so/my-integrations" target="_blank">notion.so/my-integrations</a>，點「+ 新連接」，名稱填 <strong>Body Cut Tracker</strong>，選「存取權杖」，點「建立連接」。</p>
+    </div>
+
+    <div class="setup-step">
+      <div class="setup-step-num">STEP 02 — 貼上 API Key</div>
+      <p>建立後複製「內部整合密鑰」（格式：ntn_xxx... 或 secret_xxx...）</p>
+      <input class="setup-input" id="apiKeyInput" type="text" placeholder="ntn_xxxxxxxxxxxxxxxxxxxxxxxxxx" autocomplete="off">
+    </div>
+
+    <div class="setup-step">
+      <div class="setup-step-num">STEP 03 — 設定 Database ID（可選）</div>
+      <p>若你已有現成的 Notion 資料庫，貼上 ID；留空則自動建立新的。</p>
+      <input class="setup-input" id="dbIdInput" type="text" placeholder="留空 = 自動建立新資料庫">
+    </div>
+
+    <button class="btn-setup" onclick="setupNotion()">⚡ 連接 Notion 並開始</button>
+    <div class="setup-err" id="setupErr"></div>
+  </div>
+</div>
+
+<!-- ════ MAIN APP ════ -->
+<nav class="nav">
+  <div class="nav-logo"><div><div class="lt">BODY CUT</div><div class="ls">2026.05.30 → 08.03</div></div></div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('plan',this)">📋 作戰計畫</button>
+    <button class="nav-tab" onclick="showPage('tracker',this)">📊 進度追蹤 <span class="nav-badge" id="entryBadge">0</span></button>
+  </div>
+  <div class="nav-sync">
+    <div class="sync-dot" id="syncDot"></div>
+    <span id="syncLabel">未連接</span>
+    <span style="color:var(--border)">|</span>
+    <span style="cursor:pointer;color:var(--muted2);" onclick="showSetup()">設定</span>
+  </div>
+</nav>
+
+<!-- ════ PAGE: PLAN ════ -->
+<div class="page active" id="page-plan">
+  <div class="plan-hero">
+    <div class="hero-tag">▸ INBODY 920 ／ 健身工廠 ／ 2026.05.30 ／ 27歲 男性 172cm</div>
+    <h1 class="hero-h1">專業<span>減脂</span><br>作戰計畫</h1>
+    <div class="hero-sub">TARGET: 83.7KG → 79.1KG ／ BODY FAT: 16.9% → 12.0% ／ DURATION: 9 WEEKS</div>
+  </div>
+  <div class="stats-strip">
+    <div class="stat-cell"><div class="stat-lbl">目前體重</div><div class="stat-val">83.7 <span class="stat-unit">kg</span></div></div>
+    <div class="stat-cell"><div class="stat-lbl">目標體重</div><div class="stat-val c-y">79.1 <span class="stat-unit">kg</span></div></div>
+    <div class="stat-cell"><div class="stat-lbl">需減脂肪</div><div class="stat-val c-r">4.6 <span class="stat-unit">kg</span></div></div>
+    <div class="stat-cell"><div class="stat-lbl">InBody 評分</div><div class="stat-val c-b">92 <span class="stat-unit">/100</span></div></div>
+    <div class="stat-cell"><div class="stat-lbl">骨骼肌</div><div class="stat-val c-g">39.8 <span class="stat-unit">kg</span></div></div>
+  </div>
+  <div class="plan-body">
+    <div>
+      <div class="phases-col">
+        <div class="col-title">週進度計畫</div>
+        <div class="col-sub">// 2026.05.30 → 2026.08.03 ／ 9 WEEKS ／ PROFESSIONAL CUT PROTOCOL</div>
+        <div class="phase"><div class="ph-head"><div class="ph-num">W1—2</div><div class="ph-info"><div class="ph-date">05.30 — 06.13</div><h3>適應期 ADAPTATION</h3><span class="ph-tag tag-cut">MODERATE CUT</span></div><div class="ph-target"><div class="tw">82.3</div><div class="tw-lbl">目標體重 kg</div></div></div><div class="ph-body"><div class="ph-col"><h4>訓練安排</h4><ul><li>重訓 4次/週（全身複合動作）</li><li>低強度有氧 30分鐘 × 3次</li><li>每週減重目標：0.7 kg</li><li>保持大重量，防肌肉流失</li></ul></div><div class="ph-col"><h4>飲食策略</h4><ul><li>熱量：<strong style="color:var(--accent)">2,250 kcal</strong>（赤字 -660）</li><li>蛋白質：每公斤 2.2g → 184g</li><li>碳水：訓練前後集中攝取</li><li>建立飲食習慣，紀錄每餐</li></ul></div></div></div>
+        <div class="phase"><div class="ph-head"><div class="ph-num">W3—5</div><div class="ph-info"><div class="ph-date">06.14 — 07.05</div><h3>主力減脂期 DEEP CUT</h3><span class="ph-tag tag-deep">AGGRESSIVE CUT</span></div><div class="ph-target"><div class="tw">80.1</div><div class="tw-lbl">目標體重 kg</div></div></div><div class="ph-body"><div class="ph-col"><h4>訓練安排</h4><ul><li>重訓 5次/週（推拉腿分化）</li><li>HIIT 20分鐘 × 2次/週</li><li>低強度有氧 40分鐘 × 2次</li><li>步數目標：每天 10,000 步</li></ul></div><div class="ph-col"><h4>飲食策略</h4><ul><li>熱量：<strong style="color:var(--accent)">2,100 kcal</strong>（赤字 -810）</li><li>蛋白質：維持 180–190g</li><li>每週一次 Refeed Day 2,600 kcal</li><li>碳水選糙米、地瓜</li></ul></div></div></div>
+        <div class="phase"><div class="ph-head"><div class="ph-num">W6—7</div><div class="ph-info"><div class="ph-date">07.06 — 07.19</div><h3>強化期 INTENSIFY</h3><span class="ph-tag tag-deep">AGGRESSIVE CUT</span></div><div class="ph-target"><div class="tw">79.3</div><div class="tw-lbl">目標體重 kg</div></div></div><div class="ph-body"><div class="ph-col"><h4>訓練安排</h4><ul><li>重訓維持 5次/週</li><li>早晨空腹有氧 20分鐘</li><li>HIIT 減為 1次，防疲勞</li><li>睡眠 7–8小時（恢復關鍵）</li></ul></div><div class="ph-col"><h4>飲食策略</h4><ul><li>熱量：<strong style="color:var(--accent)">2,050 kcal</strong>（赤字 -860）</li><li>循環碳水：訓練日 +100 kcal</li><li>休息日碳水降至 100g 以下</li></ul></div></div></div>
+        <div class="phase"><div class="ph-head"><div class="ph-num">W8—9</div><div class="ph-info"><div class="ph-date">07.20 — 08.03</div><h3>衝刺收尾 PEAK WEEK</h3><span class="ph-tag tag-peak">FINAL PUSH</span></div><div class="ph-target"><div class="tw">79.1</div><div class="tw-lbl">目標體重 kg</div></div></div><div class="ph-body"><div class="ph-col"><h4>訓練安排</h4><ul><li>重訓降為 3–4次</li><li>每日步行有氧 45分鐘</li><li>停止 HIIT，讓身體消炎</li><li>08.03 InBody 複測</li></ul></div><div class="ph-col"><h4>飲食策略</h4><ul><li>熱量：<strong style="color:var(--accent)">2,000 kcal</strong>（赤字 -900）</li><li>蛋白質拉高至 200g</li><li>減少鈉鹽，降水腫</li><li>最後 3天輕微碳水填充</li></ul></div></div></div>
+      </div>
+      <div class="prog-track">
+        <div class="prog-lbl"><span>83.7 KG START</span><span>9週進度</span><span>79.1 KG TARGET</span></div>
+        <div class="prog-bg"><div class="prog-fill" id="planProgress"></div></div>
+        <div class="prog-miles"><span>W1 83.7</span><span>W2 83.0</span><span>W3 82.3</span><span>W4 81.6</span><span>W5 80.9</span><span>W6 80.2</span><span>W7 79.7</span><span>W8 79.4</span><span>W9 79.1</span></div>
+      </div>
+      <div class="plan-chart-wrap">
+        <div class="plan-chart-ttl">// 9週目標體重曲線</div>
+        <svg width="100%" viewBox="0 0 700 120" xmlns="http://www.w3.org/2000/svg">
+          <defs><linearGradient id="lg1" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#ff4d00"/><stop offset="100%" stop-color="#e8ff00"/></linearGradient><linearGradient id="lg2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#e8ff00" stop-opacity=".1"/><stop offset="100%" stop-color="#e8ff00" stop-opacity="0"/></linearGradient></defs>
+          <line x1="0" y1="10" x2="700" y2="10" stroke="#1a1a1a" stroke-width="1"/><line x1="0" y1="44" x2="700" y2="44" stroke="#1a1a1a" stroke-width="1"/><line x1="0" y1="76" x2="700" y2="76" stroke="#1a1a1a" stroke-width="1"/><line x1="0" y1="105" x2="700" y2="105" stroke="#222" stroke-width="1"/>
+          <text x="2" y="9" fill="#333" font-size="8" font-family="Roboto Mono">84</text><text x="2" y="43" fill="#333" font-size="8" font-family="Roboto Mono">82</text><text x="2" y="75" fill="#333" font-size="8" font-family="Roboto Mono">80</text><text x="2" y="104" fill="#333" font-size="8" font-family="Roboto Mono">79</text>
+          <path d="M20,10 L97,26 L174,44 L251,60 L328,76 L405,87 L482,94 L559,99 L636,103 L636,105 L20,105Z" fill="url(#lg2)"/>
+          <path d="M20,10 L97,26 L174,44 L251,60 L328,76 L405,87 L482,94 L559,99 L636,103" fill="none" stroke="url(#lg1)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="20" cy="10" r="4" fill="#ff4d00"/><circle cx="636" cy="103" r="4" fill="#e8ff00"/>
+          <text x="645" y="107" fill="#e8ff00" font-size="9" font-family="Bebas Neue">79.1</text>
+          <text x="14" y="118" fill="#2a2a2a" font-size="8" font-family="Roboto Mono">W1</text><text x="91" y="118" fill="#2a2a2a" font-size="8" font-family="Roboto Mono">W2</text><text x="168" y="118" fill="#2a2a2a" font-size="8" font-family="Roboto Mono">W3</text><text x="245" y="118" fill="#2a2a2a" font-size="8" font-family="Roboto Mono">W4</text><text x="322" y="118" fill="#2a2a2a" font-size="8" font-family="Roboto Mono">W5</text><text x="399" y="118" fill="#2a2a2a" font-size="8" font-family="Roboto Mono">W6</text><text x="476" y="118" fill="#2a2a2a" font-size="8" font-family="Roboto Mono">W7</text><text x="553" y="118" fill="#2a2a2a" font-size="8" font-family="Roboto Mono">W8</text><text x="626" y="118" fill="#2a2a2a" font-size="8" font-family="Roboto Mono">W9</text>
+        </svg>
+      </div>
+    </div>
+    <div class="sidebar-col">
+      <div class="cal-card"><div class="card-ttl">// 熱量攝取策略</div><div class="cal-big">2,100</div><div class="cal-unit">kcal ／ 主力減脂期日均</div><div class="deficit-box"><div class="dl">基礎代謝率 (BMR)</div><div class="dv" style="color:#bbb;">1,873 <span style="font-size:11px;font-family:'Roboto Mono',monospace;color:var(--muted);">kcal</span></div><div class="ds">TDEE ≈ 2,913 kcal ／ 赤字 <span style="color:var(--accent2);">-810 kcal/day</span></div></div><div class="macro-row"><div><div class="macro-nm">PROTEIN 蛋白質</div><div class="macro-bar"><div class="macro-fill fill-p"></div></div></div><div style="text-align:right"><div class="macro-v m-p">185 <span class="macro-g">g</span></div><div style="font-size:8px;color:var(--muted);font-family:'Roboto Mono',monospace;">740 kcal · 35%</div></div></div><div class="macro-row"><div><div class="macro-nm">CARBS 碳水</div><div class="macro-bar"><div class="macro-fill fill-c"></div></div></div><div style="text-align:right"><div class="macro-v m-c">175 <span class="macro-g">g</span></div><div style="font-size:8px;color:var(--muted);font-family:'Roboto Mono',monospace;">700 kcal · 33%</div></div></div><div class="macro-row"><div><div class="macro-nm">FAT 脂肪</div><div class="macro-bar"><div class="macro-fill fill-f"></div></div></div><div style="text-align:right"><div class="macro-v m-f">73 <span class="macro-g">g</span></div><div style="font-size:8px;color:var(--muted);font-family:'Roboto Mono',monospace;">660 kcal · 32%</div></div></div></div>
+      <div class="refeed-card"><div class="card-ttl">// REFEED DAY PROTOCOL</div><p>每週選一天（訓練最重日子）熱量拉高至 <strong>2,600 kcal</strong>。以碳水增加為主（+300–400g），蛋白質維持，脂肪不增加。目的是<strong>回補肌糖原、防代謝適應、穩定瘦素</strong>。</p></div>
+      <div class="rules-card"><h3>選手級黃金準則</h3><div class="rule-item"><div class="rule-n">01</div><div>蛋白質每公斤 <strong style="color:#ff6b6b">2.2g</strong>，每餐至少 35g</div></div><div class="rule-item"><div class="rule-n">02</div><div>每日 <strong style="color:var(--accent3)">水分 3–4L</strong></div></div><div class="rule-item"><div class="rule-n">03</div><div><strong style="color:var(--accent)">睡眠 7–8小時</strong>，皮質醇升高掉肌肉</div></div><div class="rule-item"><div class="rule-n">04</div><div>每週量一次體重（早晨空腹）</div></div><div class="rule-item"><div class="rule-n">05</div><div>重訓強度不大幅降低，<strong style="color:var(--accent)">強度是保肌信號</strong></div></div><div class="rule-item"><div class="rule-n">06</div><div>每 3週身體照片記錄，數字非唯一指標</div></div></div>
+      <div class="supp-card"><div class="card-ttl">// 補劑建議</div><div class="supp-grid"><div class="supp-item" style="border-left:2px solid var(--accent)"><strong>乳清蛋白</strong><span>訓練後 30分鐘</span></div><div class="supp-item" style="border-left:2px solid #ff6b6b"><strong>肌酸 5g/天</strong><span>維持肌力</span></div><div class="supp-item" style="border-left:2px solid var(--accent3)"><strong>魚油 3g/天</strong><span>抗發炎</span></div><div class="supp-item" style="border-left:2px solid var(--muted)"><strong>綜合維生素</strong><span>飲食限縮期</span></div></div></div>
+    </div>
+  </div>
+  <div class="plan-footer"><span>INBODY 920 ／ 2026.05.30 ／ 健身工廠</span><span>骨骼肌 <span>39.8 KG</span> ／ 除脂體重 <span>69.6 KG</span></span><span>TARGET <span>2026.08.03</span></span></div>
+</div>
+
+<!-- ════ PAGE: TRACKER ════ -->
+<div class="page" id="page-tracker">
+  <div class="tracker-wrap">
+    <div class="tr-sidebar">
+      <div class="tr-sb-head"><div class="sh-title">BODY LOG</div><div class="sh-sub">Notion 雲端同步 · 跨裝置</div></div>
+      <div class="phase-status">
+        <div class="ps-label">// 目前階段</div>
+        <div class="ps-name" id="psName">W1–2 適應期</div>
+        <div class="ps-bg"><div class="ps-fill" id="psFill" style="width:0%"></div></div>
+        <div class="ps-info"><span>05.30</span><span id="psPct">0%</span><span>08.03</span></div>
+      </div>
+      <div class="inp-section">
+        <div class="inp-title">// 手動輸入體重</div>
+        <div class="inp-row"><label>日期</label><input type="date" id="logDate"></div>
+        <div class="g2">
+          <div class="inp-row"><label>體重 (kg)</label><input type="number" id="logWeight" step="0.1" min="60" max="120" placeholder="83.7"></div>
+          <div class="inp-row"><label>體脂率 (%)</label><input type="number" id="logBf" step="0.1" min="5" max="40" placeholder="16.9"></div>
+        </div>
+        <div class="inp-row"><label>備註</label><textarea id="logNote" placeholder="腿日、睡很好…"></textarea></div>
+        <button class="btn-log" id="logBtn" onclick="addEntry()">＋ 記錄並同步 Notion</button>
+      </div>
+      <div class="up-section">
+        <div class="inp-title">// 上傳 InBody 報告</div>
+        <div class="up-zone" id="upZone">
+          <input type="file" id="inbodyFile" accept="image/*" onchange="handleFile(this)">
+          <div class="up-icon">📊</div>
+          <div class="up-text" id="upText">拖曳或點擊上傳<br><strong>InBody 報告照片</strong><br><span style="font-size:8px;color:var(--muted);">AI 自動解讀數值</span></div>
+        </div>
+        <button class="btn-analyze" id="analyzeBtn" onclick="analyzeInBody()" disabled>⚡ AI 解析 InBody</button>
+        <div class="ai-box" id="aiBox"><div class="ai-lbl">// AI 解析結果</div><div id="aiText"></div><button class="btn-import" onclick="importAi()">✓ 匯入並同步 Notion</button></div>
+      </div>
+      <div class="qs-grid">
+        <div class="qs"><div class="qs-v c-y" id="qs-n">0</div><div class="qs-l">記錄天數</div></div>
+        <div class="qs"><div class="qs-v c-g" id="qs-lost">0.0</div><div class="qs-l">已減 kg</div></div>
+        <div class="qs"><div class="qs-v c-r" id="qs-rem">4.6</div><div class="qs-l">還差 kg</div></div>
+        <div class="qs"><div class="qs-v c-b" id="qs-days">65</div><div class="qs-l">剩餘天數</div></div>
+      </div>
+    </div>
+    <div class="tr-main">
+      <div class="tr-main-head"><h2>進度追蹤</h2><div class="tab-row"><button class="ttab active" onclick="switchTab('chart',this)">圖表</button><button class="ttab" onclick="switchTab('log',this)">記錄</button></div></div>
+      <div class="tc-row">
+        <div class="tc"><div class="tc-l">起始體重</div><div class="tc-v c-r">83.7 <span style="font-size:12px;color:var(--muted);font-family:'Roboto Mono',monospace;">kg</span></div><div class="tc-s">2026.05.30</div></div>
+        <div class="tc"><div class="tc-l">目前體重</div><div class="tc-v c-y" id="curW">—</div><div class="tc-s" id="curDate">尚無記錄</div></div>
+        <div class="tc"><div class="tc-l">目標體重</div><div class="tc-v c-g">79.1 <span style="font-size:12px;color:var(--muted);font-family:'Roboto Mono',monospace;">kg</span></div><div class="tc-s">體脂 12%</div></div>
+        <div class="tc"><div class="tc-l">目前體脂</div><div class="tc-v c-b" id="curBf">—</div><div class="tc-s">目標 12.0%</div></div>
+      </div>
+      <div id="tab-chart" class="chart-section">
+        <div class="chart-box">
+          <div class="chart-head"><div class="chart-ttl">// 體重趨勢 (KG)</div><div class="chart-legend"><span><span class="leg-dot" style="background:var(--accent)"></span>實際</span><span><span class="leg-dot" style="background:var(--muted)"></span>目標</span><span><span class="leg-dot" style="background:var(--accent3)"></span>InBody</span></div></div>
+          <canvas id="wChart"></canvas>
+        </div>
+      </div>
+      <div id="tab-log" class="log-section" style="display:none;">
+        <div class="log-head"><span>日期</span><span>體重</span><span>變化</span><span>體脂%</span><span>備註</span><span>來源</span></div>
+        <div id="logList"></div>
+        <div class="empty-st" id="emptyState"><div class="big">0</div><div>尚無記錄<br>從左側輸入開始</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── CONFIG ─────────────────────────────────────────────────────────────────
+const START=83.7,TARGET=79.1,START_DATE='2026-05-30',END_DATE='2026-08-03';
+const NOTION_VERSION='2022-06-28';
+const PROXY='https://notion-proxy-2nui.onrender.com';
+
+// ── STATE ──────────────────────────────────────────────────────────────────
+let NOTION_KEY=localStorage.getItem('notion_key')||'';
+let DB_ID=localStorage.getItem('notion_db_id')||'';
+let entries=[];
+let pendingAi=null,imgB64=null;
+
+// ── INIT ───────────────────────────────────────────────────────────────────
+window.onload=async()=>{
+  document.getElementById('logDate').value=new Date().toISOString().split('T')[0];
+
+  // Pre-fill if key stored
+  if(NOTION_KEY){
+    document.getElementById('apiKeyInput').value=NOTION_KEY;
+    if(DB_ID) document.getElementById('dbIdInput').value=DB_ID;
+  }
+
+  // If we have key + db, skip setup and load
+  if(NOTION_KEY && DB_ID){
+    document.getElementById('setupScreen').style.display='none';
+    setSyncStatus('syncing','連接中...');
+    await loadFromNotion();
+  }
+
+  updatePhase();
+  updatePlanProgress();
+
+  // drag-drop
+  const zone=document.getElementById('upZone');
+  zone.addEventListener('dragover',e=>{e.preventDefault();zone.classList.add('dragover');});
+  zone.addEventListener('dragleave',()=>zone.classList.remove('dragover'));
+  zone.addEventListener('drop',e=>{e.preventDefault();zone.classList.remove('dragover');const f=e.dataTransfer.files[0];if(f)processFile(f);});
+  window.addEventListener('resize',()=>{if(document.getElementById('tab-chart').style.display!=='none')renderChart();});
+};
+
+// ── NOTION API (via CORS proxy) ────────────────────────────────────────────
+async function notionAPI(method,path,body){
+  const res=await fetch(`${PROXY}/notion${path}`,{
+    method,
+    headers:{
+      'Authorization':`Bearer ${NOTION_KEY}`,
+      'Content-Type':'application/json',
+      'Notion-Version':NOTION_VERSION,
+    },
+    body:body?JSON.stringify(body):undefined
+  });
+  if(!res.ok){
+    const err=await res.json();
+    throw new Error(err.message||`API Error ${res.status}`);
+  }
+  return res.json();
+}
+
+// ── SETUP ──────────────────────────────────────────────────────────────────
+async function setupNotion(){
+  const key=document.getElementById('apiKeyInput').value.trim();
+  const dbId=document.getElementById('dbIdInput').value.trim().replace(/-/g,'');
+  const errEl=document.getElementById('setupErr');
+  errEl.style.display='none';
+
+  if(!key){errEl.textContent='請填入 Notion API Key';errEl.style.display='block';return;}
+
+  NOTION_KEY=key;
+  localStorage.setItem('notion_key',key);
+
+  showLoading('連接 Notion...');
+
+  try{
+    if(dbId){
+      // Use provided DB ID
+      DB_ID=dbId;
+      localStorage.setItem('notion_db_id',dbId);
+      await loadFromNotion();
+    } else {
+      // Create new database
+      await createNotionDatabase();
+    }
+    document.getElementById('setupScreen').style.display='none';
+    setSyncStatus('ok','已同步');
+    showToast('✓ Notion 連接成功！');
+  } catch(e){
+    errEl.textContent='連接失敗：'+e.message+' — 請確認 API Key 正確，並確認已授予 Integration 存取 Notion 頁面的權限。';
+    errEl.style.display='block';
+    NOTION_KEY=''; DB_ID='';
+    localStorage.removeItem('notion_key');
+    localStorage.removeItem('notion_db_id');
+  }
+  hideLoading();
+}
+
+async function createNotionDatabase(){
+  // First, search for a page to put database in
+  const search=await notionAPI('POST','/search',{filter:{value:'page',property:'object'},page_size:1});
+  const parentId=search.results?.[0]?.id;
+  if(!parentId) throw new Error('找不到 Notion 頁面來建立資料庫，請在 Notion 建立一個頁面並授予 Integration 存取權限');
+
+  const db=await notionAPI('POST','/databases',{
+    parent:{type:'page_id',page_id:parentId},
+    title:[{type:'text',text:{content:'🏋️ Body Cut 減脂追蹤'}}],
+    properties:{
+      '日期':{title:{}},
+      '體重(kg)':{number:{format:'number'}},
+      '體脂率(%)':{number:{format:'number'}},
+      '骨骼肌(kg)':{number:{format:'number'}},
+      '變化(kg)':{number:{format:'number'}},
+      '備註':{rich_text:{}},
+      '來源':{select:{options:[{name:'手動',color:'gray'},{name:'InBody',color:'blue'}]}}
+    }
+  });
+  DB_ID=db.id.replace(/-/g,'');
+  localStorage.setItem('notion_db_id',DB_ID);
+}
+
+function showSetup(){
+  document.getElementById('setupScreen').style.display='flex';
+}
+
+// ── LOAD FROM NOTION ────────────────────────────────────────────────────────
+async function loadFromNotion(){
+  if(!NOTION_KEY||!DB_ID) return;
+  setSyncStatus('syncing','載入中...');
+  try{
+    const dbIdFormatted=DB_ID.replace(/(.{8})(.{4})(.{4})(.{4})(.{12})/,'$1-$2-$3-$4-$5');
+    const res=await notionAPI('POST',`/databases/${dbIdFormatted}/query`,{
+      sorts:[{property:'日期',direction:'ascending'}],
+      page_size:100
+    });
+    entries=res.results.map(page=>{
+      const props=page.properties;
+      return{
+        notionId:page.id,
+        date:props['日期']?.title?.[0]?.plain_text||'',
+        weight:props['體重(kg)']?.number||0,
+        bf:props['體脂率(%)']?.number||null,
+        muscleMass:props['骨骼肌(kg)']?.number||null,
+        note:props['備註']?.rich_text?.[0]?.plain_text||'',
+        source:props['來源']?.select?.name==='InBody'?'inbody':'manual',
+      };
+    }).filter(e=>e.date&&e.weight);
+    setSyncStatus('ok',`已同步 (${new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'})})`);
+    updateTracker();
+    renderChart();
+  } catch(e){
+    setSyncStatus('err','同步失敗');
+    showToast('⚠ 載入失敗：'+e.message);
+    console.error(e);
+  }
+}
+
+// ── ADD ENTRY → NOTION ──────────────────────────────────────────────────────
+async function addEntry(){
+  const date=document.getElementById('logDate').value;
+  const w=parseFloat(document.getElementById('logWeight').value);
+  const bf=parseFloat(document.getElementById('logBf').value)||null;
+  const note=document.getElementById('logNote').value.trim();
+  if(!date||isNaN(w)){showToast('請填入日期與體重');return;}
+  if(w<60||w>120){showToast('體重數值不合理');return;}
+  if(!NOTION_KEY||!DB_ID){showToast('請先連接 Notion');showSetup();return;}
+
+  // calc delta
+  const prev=entries.filter(e=>e.date<date).slice(-1)[0];
+  const delta=prev?+(w-prev.weight).toFixed(1):null;
+
+  document.getElementById('logBtn').disabled=true;
+  setSyncStatus('syncing','同步中...');
+  showLoading('儲存至 Notion...');
+
+  try{
+    const dbIdFormatted=DB_ID.replace(/(.{8})(.{4})(.{4})(.{4})(.{12})/,'$1-$2-$3-$4-$5');
+    await notionAPI('POST','/pages',{
+      parent:{database_id:dbIdFormatted},
+      properties:{
+        '日期':{title:[{text:{content:date}}]},
+        '體重(kg)':{number:w},
+        ...(bf!=null?{'體脂率(%)':{number:bf}}:{}),
+        ...(delta!=null?{'變化(kg)':{number:delta}}:{}),
+        ...(note?{'備註':{rich_text:[{text:{content:note}}]}}:{}),
+        '來源':{select:{name:'手動'}}
+      }
+    });
+    document.getElementById('logWeight').value='';
+    document.getElementById('logBf').value='';
+    document.getElementById('logNote').value='';
+    setSyncStatus('ok','已同步');
+    showToast('✓ 已記錄並同步至 Notion');
+    await loadFromNotion();
+  } catch(e){
+    setSyncStatus('err','同步失敗');
+    showToast('⚠ 儲存失敗：'+e.message);
+  }
+  document.getElementById('logBtn').disabled=false;
+  hideLoading();
+}
+
+// ── AI INBODY ───────────────────────────────────────────────────────────────
+function handleFile(inp){if(inp.files[0])processFile(inp.files[0]);}
+function processFile(file){
+  if(!file.type.startsWith('image/')){showToast('請上傳圖片');return;}
+  const r=new FileReader();
+  r.onload=e=>{
+    imgB64=e.target.result.split(',')[1];
+    document.getElementById('upText').innerHTML=`<strong style="color:var(--green)">✓ 圖片已載入</strong><br><span style="font-size:8px;color:var(--muted);">${file.name}</span>`;
+    document.getElementById('analyzeBtn').disabled=false;
+  };
+  r.readAsDataURL(file);
+}
+
+async function analyzeInBody(){
+  if(!imgB64)return;
+  showLoading('AI 解析 InBody 中...');
+  document.getElementById('aiBox').classList.remove('show');
+  pendingAi=null;
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:800,messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:'image/jpeg',data:imgB64}},{type:'text',text:`這是 InBody 報告。找出以下數值以純 JSON 回傳（不要 markdown）：{"date":"YYYY-MM-DD，若無填 ${new Date().toISOString().split('T')[0]}","weight":體重數字,"bodyFat":體脂率數字或null,"muscleMass":骨骼肌數字或null,"note":"InBody測量摘要"}`}]}]})});
+    const data=await res.json();
+    let txt=data.content.filter(b=>b.type==='text').map(b=>b.text).join('').replace(/```json|```/g,'').trim();
+    const p=JSON.parse(txt);pendingAi=p;
+    let html='';
+    if(p.date)html+=`<div>📅 ${p.date}</div>`;
+    if(p.weight)html+=`<div>⚖️ 體重：<strong style="color:var(--accent)">${p.weight} kg</strong></div>`;
+    if(p.bodyFat)html+=`<div>📊 體脂：<strong style="color:var(--accent3)">${p.bodyFat}%</strong></div>`;
+    if(p.muscleMass)html+=`<div>💪 骨骼肌：<strong style="color:#ff6b6b">${p.muscleMass} kg</strong></div>`;
+    document.getElementById('aiText').innerHTML=html;
+    document.getElementById('aiBox').classList.add('show');
+  } catch(e){
+    document.getElementById('aiText').innerHTML='<span style="color:var(--red)">解析失敗</span>';
+    document.getElementById('aiBox').classList.add('show');
+  }
+  hideLoading();
+}
+
+async function importAi(){
+  if(!pendingAi)return;
+  if(!NOTION_KEY||!DB_ID){showToast('請先連接 Notion');showSetup();return;}
+  const d=pendingAi;
+  const prev=entries.filter(e=>e.date<d.date).slice(-1)[0];
+  const delta=prev?+(d.weight-prev.weight).toFixed(1):null;
+
+  showLoading('同步至 Notion...');
+  try{
+    const dbIdFormatted=DB_ID.replace(/(.{8})(.{4})(.{4})(.{4})(.{12})/,'$1-$2-$3-$4-$5');
+    await notionAPI('POST','/pages',{
+      parent:{database_id:dbIdFormatted},
+      properties:{
+        '日期':{title:[{text:{content:d.date}}]},
+        '體重(kg)':{number:d.weight},
+        ...(d.bodyFat!=null?{'體脂率(%)':{number:d.bodyFat}}:{}),
+        ...(d.muscleMass!=null?{'骨骼肌(kg)':{number:d.muscleMass}}:{}),
+        ...(delta!=null?{'變化(kg)':{number:delta}}:{}),
+        '備註':{rich_text:[{text:{content:d.note||'InBody測量'}}]},
+        '來源':{select:{name:'InBody'}}
+      }
+    });
+    document.getElementById('aiBox').classList.remove('show');
+    document.getElementById('upText').innerHTML=`拖曳或點擊上傳<br><strong>InBody 報告照片</strong>`;
+    document.getElementById('analyzeBtn').disabled=true;
+    imgB64=null;pendingAi=null;
+    showToast('✓ InBody 數據已同步至 Notion');
+    await loadFromNotion();
+  } catch(e){
+    showToast('⚠ 儲存失敗：'+e.message);
+  }
+  hideLoading();
+}
+
+// ── UI ─────────────────────────────────────────────────────────────────────
+function updateTracker(){
+  const n=entries.length;
+  const latest=n>0?entries[n-1]:null;
+  document.getElementById('qs-n').textContent=n;
+  document.getElementById('entryBadge').textContent=n;
+  if(latest){
+    const lost=+(START-latest.weight).toFixed(1);
+    const rem=+(latest.weight-TARGET).toFixed(1);
+    document.getElementById('qs-lost').textContent=lost>0?lost.toFixed(1):'0.0';
+    document.getElementById('qs-rem').textContent=rem>0?rem.toFixed(1):'0.0';
+    document.getElementById('curW').innerHTML=`${latest.weight} <span style="font-size:12px;color:var(--muted);font-family:'Roboto Mono',monospace;">kg</span>`;
+    document.getElementById('curDate').textContent=latest.date;
+    if(latest.bf)document.getElementById('curBf').innerHTML=`${latest.bf} <span style="font-size:12px;color:var(--muted);font-family:'Roboto Mono',monospace;">%</span>`;
+    const pct=Math.max(0,Math.min(100,Math.round((Math.max(0,lost)/(START-TARGET))*100)));
+    document.getElementById('psFill').style.width=pct+'%';
+    document.getElementById('psPct').textContent=pct+'%';
+  }
+  const daysLeft=Math.max(0,Math.round((new Date(END_DATE)-new Date())/86400000));
+  document.getElementById('qs-days').textContent=daysLeft;
+  renderLog();
+}
+
+function updatePhase(){
+  const w=Math.ceil((new Date()-new Date(START_DATE))/604800000);
+  const phases=[{r:[1,2],n:'W1–2 適應期'},{r:[3,5],n:'W3–5 主力減脂期'},{r:[6,7],n:'W6–7 強化期'},{r:[8,9],n:'W8–9 衝刺收尾'}];
+  const p=phases.find(x=>w>=x.r[0]&&w<=x.r[1]);
+  document.getElementById('psName').textContent=p?p.n:(w>9?'計畫完成 🎉':'W1–2 適應期');
+}
+
+function updatePlanProgress(){
+  const now=new Date(),s=new Date(START_DATE),e=new Date(END_DATE);
+  const pct=Math.max(0,Math.min(100,Math.round(((now-s)/(e-s))*100)));
+  document.getElementById('planProgress').style.width=pct+'%';
+}
+
+function renderLog(){
+  const list=document.getElementById('logList'),empty=document.getElementById('emptyState');
+  if(!entries.length){list.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  const rev=[...entries].reverse();
+  list.innerHTML=rev.map((e,i)=>{
+    const prev=rev[i+1];
+    let delta='—',cls='lr-same';
+    if(prev){const d=+(e.weight-prev.weight).toFixed(1);if(d>0){delta='+'+d;cls='lr-up';}else if(d<0){delta=''+d;cls='lr-dn';}else{delta='±0';}}
+    return `<div class="log-row-el"><span class="lr-date">${e.date}</span><span class="lr-w">${e.weight}</span><span class="${cls}">${delta}</span><span class="lr-bf">${e.bf?e.bf+'%':'—'}</span><span class="lr-note">${e.note||'—'}</span><span class="badge ${e.source==='inbody'?'b-inbody':'b-manual'}">${e.source==='inbody'?'InBody':'手動'}</span></div>`;
+  }).join('');
+}
+
+function renderChart(){
+  const canvas=document.getElementById('wChart');
+  const W=canvas.offsetWidth||700,H=190;
+  canvas.width=W;canvas.height=H;
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,W,H);
+  const PAD={t:14,b:26,l:34,r:16};
+  const cW=W-PAD.l-PAD.r,cH=H-PAD.t-PAD.b;
+  const startMs=new Date(START_DATE).getTime(),endMs=new Date(END_DATE).getTime(),totalMs=endMs-startMs;
+  const minY=TARGET-0.8,maxY=START+0.4;
+  const yS=v=>PAD.t+cH-((v-minY)/(maxY-minY))*cH;
+  const xS=date=>PAD.l+((new Date(date).getTime()-startMs)/totalMs)*cW;
+  ctx.strokeStyle='#1a1a1a';ctx.lineWidth=1;
+  for(let y=Math.ceil(minY);y<=Math.ceil(maxY);y++){const yy=yS(y);ctx.beginPath();ctx.moveTo(PAD.l,yy);ctx.lineTo(PAD.l+cW,yy);ctx.stroke();ctx.fillStyle='#333';ctx.font='8px Roboto Mono';ctx.textAlign='right';ctx.fillText(y,PAD.l-3,yy+3);}
+  ctx.setLineDash([4,6]);ctx.strokeStyle='#222';ctx.lineWidth=1.5;
+  ctx.beginPath();for(let i=0;i<=9;i++){const x=PAD.l+(i/9)*cW,v=START-(START-TARGET)*(i/9),y=yS(v);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);}
+  ctx.stroke();ctx.setLineDash([]);
+  if(entries.length>0){
+    const grad=ctx.createLinearGradient(PAD.l,0,PAD.l+cW,0);grad.addColorStop(0,'#ff4d00');grad.addColorStop(1,'#e8ff00');
+    const aG=ctx.createLinearGradient(0,PAD.t,0,PAD.t+cH);aG.addColorStop(0,'rgba(232,255,0,0.1)');aG.addColorStop(1,'rgba(232,255,0,0)');
+    ctx.beginPath();entries.forEach((e,i)=>{const x=xS(e.date),y=yS(e.weight);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
+    ctx.lineTo(xS(entries[entries.length-1].date),PAD.t+cH);ctx.lineTo(xS(entries[0].date),PAD.t+cH);ctx.closePath();ctx.fillStyle=aG;ctx.fill();
+    ctx.beginPath();ctx.strokeStyle=grad;ctx.lineWidth=2;ctx.lineJoin='round';ctx.lineCap='round';
+    entries.forEach((e,i)=>{const x=xS(e.date),y=yS(e.weight);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});ctx.stroke();
+    entries.forEach(e=>{const x=xS(e.date),y=yS(e.weight);ctx.beginPath();ctx.arc(x,y,e.source==='inbody'?5:3,0,Math.PI*2);ctx.fillStyle=e.source==='inbody'?'#00d4ff':'#e8ff00';ctx.fill();});
+  }
+  ctx.fillStyle='#00ff88';ctx.font='bold 8px Roboto Mono';ctx.textAlign='left';ctx.fillText('TARGET 79.1',PAD.l+cW-76,yS(TARGET)-4);
+  ['W1','W2','W3','W4','W5','W6','W7','W8','W9'].forEach((l,i)=>{ctx.fillStyle='#2a2a2a';ctx.font='8px Roboto Mono';ctx.textAlign='center';ctx.fillText(l,PAD.l+(i/8)*cW,H-4);});
+}
+
+// ── NAV / TABS ─────────────────────────────────────────────────────────────
+function showPage(id,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  el.classList.add('active');
+  if(id==='tracker')setTimeout(renderChart,60);
+}
+function switchTab(tab,el){
+  document.querySelectorAll('.ttab').forEach(t=>t.classList.remove('active'));el.classList.add('active');
+  document.getElementById('tab-chart').style.display=tab==='chart'?'block':'none';
+  document.getElementById('tab-log').style.display=tab==='log'?'block':'none';
+  if(tab==='chart')setTimeout(renderChart,40);
+}
+
+// ── SYNC STATUS ────────────────────────────────────────────────────────────
+function setSyncStatus(status,label){
+  const dot=document.getElementById('syncDot'),lbl=document.getElementById('syncLabel');
+  dot.className='sync-dot '+status;lbl.textContent=label;
+}
+
+// ── LOADING / TOAST ────────────────────────────────────────────────────────
+function showLoading(msg){const ov=document.getElementById('loadingOv');document.getElementById('loadingTx').textContent=msg||'處理中...';ov.classList.add('show');}
+function hideLoading(){document.getElementById('loadingOv').classList.remove('show');}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
+</script>
+</body>
+</html>
