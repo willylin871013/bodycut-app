@@ -59,8 +59,11 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC',sans-seri
 .an-hist-macros{font-size:9px;font-family:'Roboto Mono',monospace;color:var(--muted);}
 .an-hist-body{display:none;padding:8px 14px 12px;}
 .an-hist-body.open{display:block;}
-.an-hist-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:11px;font-family:'Roboto Mono',monospace;}
+.an-hist-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);font-size:11px;font-family:'Roboto Mono',monospace;}
 .an-hist-row:last-child{border-bottom:none;}
+.an-hist-row .ahr-name{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:'Noto Sans TC',sans-serif;}
+.an-hist-row .ahr-macro{flex:0 0 auto;width:48px;text-align:right;}
+@media(max-width:560px){.an-hist-row{flex-wrap:wrap;}.an-hist-row .ahr-name{flex:1 0 100%;margin-bottom:2px;}.an-hist-row .ahr-macro{width:auto;flex:1;text-align:left;}}
 .an-corr-row{display:grid;grid-template-columns:100px 70px 70px 70px 1fr;gap:6px;padding:7px 0;border-bottom:1px solid var(--border);font-size:10px;font-family:'Roboto Mono',monospace;align-items:center;}
 .corr-pos{color:var(--red);}
 .corr-neg{color:var(--green);}
@@ -111,6 +114,7 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC',sans-seri
 .stat-lbl{font-size:9px;letter-spacing:3px;color:var(--muted);font-family:'Roboto Mono',monospace;text-transform:uppercase;margin-bottom:8px;}
 .stat-val{font-family:'Bebas Neue',sans-serif;font-size:44px;line-height:1;}
 .stat-unit{font-size:16px;color:var(--muted);font-family:'Noto Sans TC',sans-serif;font-weight:300;}
+.stat-sub{font-size:9px;letter-spacing:1px;color:var(--accent3);font-family:'Roboto Mono',monospace;margin-top:6px;}
 .c-y{color:var(--accent);} .c-r{color:var(--accent2);} .c-b{color:var(--accent3);} .c-g{color:var(--green);}
 
 /* PHASES */
@@ -120,8 +124,11 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC',sans-seri
 .col-title::before{content:'';display:block;width:4px;height:26px;background:var(--accent);}
 .col-sub{font-size:10px;font-family:'Roboto Mono',monospace;color:var(--muted);letter-spacing:2px;margin-bottom:24px;padding-left:14px;}
 
-.phase{margin-bottom:4px;border:1px solid var(--border);overflow:hidden;transition:border-color .2s;}
+.phase{margin-bottom:4px;border:1px solid var(--border);overflow:hidden;transition:border-color .2s;position:relative;}
 .phase:hover{border-color:rgba(232,255,0,.3);}
+.phase.current{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),0 0 24px rgba(232,255,0,.12);}
+.phase.current .ph-head{background:linear-gradient(90deg,rgba(232,255,0,.10),var(--surface) 70%);}
+.phase-now{position:absolute;top:0;right:0;background:var(--accent);color:#000;font-family:'Roboto Mono',monospace;font-size:9px;font-weight:700;letter-spacing:1px;padding:3px 10px;border-bottom-left-radius:4px;z-index:2;}
 .ph-head{display:grid;grid-template-columns:100px 1fr auto;align-items:center;padding:14px 18px;background:var(--surface);gap:14px;}
 .ph-num{font-family:'Bebas Neue',sans-serif;font-size:34px;color:var(--accent);line-height:1;}
 .ph-date{font-size:10px;font-family:'Roboto Mono',monospace;color:var(--muted);letter-spacing:1px;}
@@ -550,9 +557,9 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC',sans-seri
 
   <!-- STATS -->
   <div class="stats-strip">
-    <div class="stat-cell"><div class="stat-lbl">目前體重</div><div class="stat-val">83.7 <span class="stat-unit">kg</span></div></div>
+    <div class="stat-cell"><div class="stat-lbl">目前體重</div><div class="stat-val"><span id="planCurWeight">83.7</span> <span class="stat-unit">kg</span></div><div class="stat-sub" id="planCurDate"></div></div>
     <div class="stat-cell"><div class="stat-lbl">目標體重</div><div class="stat-val c-y">79.1 <span class="stat-unit">kg</span></div></div>
-    <div class="stat-cell"><div class="stat-lbl">需減脂肪</div><div class="stat-val c-r">4.6 <span class="stat-unit">kg</span></div></div>
+    <div class="stat-cell"><div class="stat-lbl">距目標</div><div class="stat-val c-r"><span id="planToLose">4.6</span> <span class="stat-unit">kg</span></div></div>
     <div class="stat-cell"><div class="stat-lbl">InBody 評分</div><div class="stat-val c-b">92 <span class="stat-unit">/100</span></div></div>
     <div class="stat-cell"><div class="stat-lbl">骨骼肌</div><div class="stat-val c-g">39.8 <span class="stat-unit">kg</span></div></div>
   </div>
@@ -564,7 +571,7 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC',sans-seri
         <div class="col-title">週進度計畫</div>
         <div class="col-sub">// 2026.05.30 → 2026.08.03 ／ 9 WEEKS ／ PROFESSIONAL CUT PROTOCOL</div>
 
-        <div class="phase">
+        <div class="phase" id="phase-0">
           <div class="ph-head">
             <div class="ph-num">W1—2</div>
             <div class="ph-info"><div class="ph-date">05.30 — 06.13</div><h3>適應期 ADAPTATION</h3><span class="ph-tag tag-cut">MODERATE CUT</span></div>
@@ -572,11 +579,11 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC',sans-seri
           </div>
           <div class="ph-body">
             <div class="ph-col"><h4>訓練安排</h4><ul><li>重訓 4次/週（全身複合動作為主）</li><li>低強度有氧 30分鐘 × 3次（快走/橢圓機）</li><li>每週減重目標：0.7 kg</li><li>保持大重量，防止肌肉流失</li></ul></div>
-            <div class="ph-col"><h4>飲食策略</h4><ul><li>熱量：<strong style="color:var(--accent)">2,250 kcal</strong>（赤字 -660）</li><li>蛋白質：每公斤 2.2g → 約 184g</li><li>碳水：訓練前後集中攝取</li><li>建立飲食習慣，紀錄每餐</li></ul></div>
+            <div class="ph-col"><h4>飲食策略</h4><ul><li><strong style="color:var(--accent)">▲ 高碳日（訓練）：2,400 kcal</strong>　碳水 220g ／ 蛋白 184g ／ 脂肪 87g</li><li><strong style="color:var(--accent3)">▼ 低碳日（休息）：2,100 kcal</strong>　碳水 120g ／ 蛋白 184g ／ 脂肪 98g</li><li>每週平均熱量 2,250 kcal（赤字 -660），高低碳逐日交替</li><li>適應期碳水較寬鬆，建立飲食與紀錄習慣</li></ul></div>
           </div>
         </div>
 
-        <div class="phase">
+        <div class="phase" id="phase-1">
           <div class="ph-head">
             <div class="ph-num">W3—5</div>
             <div class="ph-info"><div class="ph-date">06.14 — 07.05</div><h3>主力減脂期 DEEP CUT</h3><span class="ph-tag tag-deep">AGGRESSIVE CUT</span></div>
@@ -584,11 +591,11 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC',sans-seri
           </div>
           <div class="ph-body">
             <div class="ph-col"><h4>訓練安排</h4><ul><li>重訓 5次/週（推拉腿分化）</li><li>HIIT 20分鐘 × 2次/週</li><li>低強度有氧 40分鐘 × 2次/週</li><li>每週減重目標：0.7 kg</li><li>步數目標：每天 10,000 步</li></ul></div>
-            <div class="ph-col"><h4>飲食策略</h4><ul><li><strong style="color:var(--accent)">▲ 高碳日（訓練）：2,250 kcal</strong>　碳水 150g ／ 蛋白 185g ／ 脂肪 101g</li><li><strong style="color:var(--accent3)">▼ 低碳日（休息）：1,950 kcal</strong>　碳水 60g ／ 蛋白 185g ／ 脂肪 108g</li><li>每週平均熱量 2,100 kcal（赤字 -810），從 6/22 起高低碳交替</li><li>低碳日脂肪來源：酪梨、堅果、橄欖油、雞蛋，維持飽足感</li><li>避免果糖、精緻糖，碳水選糙米地瓜；睡前蛋白質（雞胸）</li></ul></div>
+            <div class="ph-col"><h4>飲食策略</h4><ul><li><strong style="color:var(--accent)">▲ 高碳日（訓練）：2,250 kcal</strong>　碳水 150g ／ 蛋白 185g ／ 脂肪 101g</li><li><strong style="color:var(--accent3)">▼ 低碳日（休息）：1,950 kcal</strong>　碳水 60g ／ 蛋白 185g ／ 脂肪 108g</li><li>每週平均熱量 2,100 kcal（赤字 -810），高低碳逐日交替</li><li>低碳日脂肪來源：酪梨、堅果、橄欖油、雞蛋，維持飽足感</li><li>避免果糖、精緻糖，碳水選糙米地瓜；睡前蛋白質（雞胸）</li></ul></div>
           </div>
         </div>
 
-        <div class="phase">
+        <div class="phase" id="phase-2">
           <div class="ph-head">
             <div class="ph-num">W6—7</div>
             <div class="ph-info"><div class="ph-date">07.06 — 07.19</div><h3>強化期 INTENSIFY</h3><span class="ph-tag tag-deep">AGGRESSIVE CUT</span></div>
@@ -596,11 +603,11 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC',sans-seri
           </div>
           <div class="ph-body">
             <div class="ph-col"><h4>訓練安排</h4><ul><li>重訓維持 5次/週，強度不減</li><li>每日早晨空腹有氧 20分鐘（低強度）</li><li>HIIT 減為 1次，防疲勞積累</li><li>充足睡眠 7–8小時（恢復關鍵）</li></ul></div>
-            <div class="ph-col"><h4>飲食策略</h4><ul><li>熱量：<strong style="color:var(--accent)">2,050 kcal</strong>（赤字 -860）</li><li>碳水開始微調降低（循環碳水）</li><li>訓練日 +100 kcal 碳水補充</li><li>休息日碳水降至 100g 以下</li></ul></div>
+            <div class="ph-col"><h4>飲食策略</h4><ul><li><strong style="color:var(--accent)">▲ 高碳日（訓練）：2,200 kcal</strong>　碳水 150g ／ 蛋白 185g ／ 脂肪 96g</li><li><strong style="color:var(--accent3)">▼ 低碳日（休息）：1,900 kcal</strong>　碳水 60g ／ 蛋白 185g ／ 脂肪 102g</li><li>每週平均熱量 2,050 kcal（赤字 -860），高低碳持續交替</li><li>強度不減，低碳日靠優質脂肪維持飽足</li></ul></div>
           </div>
         </div>
 
-        <div class="phase">
+        <div class="phase" id="phase-3">
           <div class="ph-head">
             <div class="ph-num">W8—9</div>
             <div class="ph-info"><div class="ph-date">07.20 — 08.03</div><h3>衝刺收尾 PEAK WEEK</h3><span class="ph-tag tag-peak">FINAL PUSH</span></div>
@@ -608,7 +615,7 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC',sans-seri
           </div>
           <div class="ph-body">
             <div class="ph-col"><h4>訓練安排</h4><ul><li>重訓降為 3–4次，保留肌肉</li><li>每日步行有氧 45分鐘</li><li>最後一週停止 HIIT，讓身體消炎</li><li>08.03 做 InBody 複測評估</li></ul></div>
-            <div class="ph-col"><h4>飲食策略</h4><ul><li>熱量：<strong style="color:var(--accent)">2,000 kcal</strong>（赤字 -900）</li><li>蛋白質拉高至 200g 保肌</li><li>減少鈉鹽攝取，降水腫</li><li>最後 3天輕微碳水填充讓線條明顯</li></ul></div>
+            <div class="ph-col"><h4>飲食策略</h4><ul><li><strong style="color:var(--accent)">▲ 高碳日（訓練）：2,150 kcal</strong>　碳水 170g ／ 蛋白 200g ／ 脂肪 74g</li><li><strong style="color:var(--accent3)">▼ 低碳日（休息）：1,850 kcal</strong>　碳水 60g ／ 蛋白 200g ／ 脂肪 90g</li><li>每週平均熱量 2,000 kcal（赤字 -900），高低碳持續交替</li><li>蛋白質拉高保肌、減鈉降水腫，最後 3 天碳水填充顯線條</li></ul></div>
           </div>
         </div>
       </div>
@@ -1063,6 +1070,42 @@ function updatePlanProgress(){
   document.getElementById('planProgress').style.width=pct+'%';
 }
 
+// 作戰計畫頂部：目前體重連動最新紀錄 + 標註目前所在區間
+function renderPlanLive(){
+  const latest=entries.length?entries[entries.length-1]:null;
+  const cw=document.getElementById('planCurWeight');
+  const cd=document.getElementById('planCurDate');
+  const tl=document.getElementById('planToLose');
+  if(latest){
+    if(cw) cw.textContent=latest.weight;
+    if(cd) cd.textContent='更新於 '+latest.date.slice(5).replace('-','/');
+    if(tl){const rem=+(latest.weight-TARGET).toFixed(1);tl.textContent=(rem>0?rem:0).toFixed(1);}
+  } else {
+    if(cw) cw.textContent=START;
+    if(cd) cd.textContent='尚無紀錄';
+    if(tl) tl.textContent=(START-TARGET).toFixed(1);
+  }
+  highlightCurrentPhase();
+}
+function highlightCurrentPhase(){
+  const today=todayStr();
+  let curIdx=PHASE_TARGETS.findIndex(ph=>today<=ph.end);
+  if(curIdx<0) curIdx=PHASE_TARGETS.length-1; // 計畫結束後停在最後一期
+  PHASE_TARGETS.forEach((ph,i)=>{
+    const el=document.getElementById('phase-'+i);
+    if(!el) return;
+    el.classList.toggle('current',i===curIdx);
+    const badge=el.querySelector('.phase-now');
+    if(i===curIdx&&!badge){
+      const b=document.createElement('div');
+      b.className='phase-now';b.textContent='◀ 你在這';
+      el.appendChild(b);
+    } else if(i!==curIdx&&badge){
+      badge.remove();
+    }
+  });
+}
+
 // ── ENTRIES ────────────────────────────────────────────────────────────────
 function addEntry(){
   const date=document.getElementById('logDate').value;
@@ -1381,6 +1424,7 @@ function updateTracker(){
   const daysLeft=Math.max(0,Math.round((new Date(END_DATE)-new Date())/86400000));
   document.getElementById('qs-days').textContent=daysLeft;
   renderLog();
+  renderPlanLive();
 }
 function updatePhase(){
   const w=Math.ceil((new Date()-new Date(START_DATE))/604800000);
@@ -1647,12 +1691,14 @@ function getCarbDayType(dateStr){
   return diff%2===0?'high':'low';
 }
 const PHASE_TARGETS=[
-  {end:'2026-06-13',kcal:2250,p:184,c:191,f:83,name:'W1-2 適應期'},
+  {end:'2026-06-13',kcal:2250,p:184,c:191,f:83,name:'W1-2 適應期',
+    high:{kcal:2400,p:184,c:220,f:87},low:{kcal:2100,p:184,c:120,f:98}},
   {end:'2026-07-05',kcal:2100,p:185,c:175,f:73,name:'W3-5 主力減脂',
     high:{kcal:2250,p:185,c:150,f:101},low:{kcal:1950,p:185,c:60,f:108}},
   {end:'2026-07-19',kcal:2050,p:185,c:165,f:72,name:'W6-7 強化期',
     high:{kcal:2200,p:185,c:150,f:96},low:{kcal:1900,p:185,c:60,f:102}},
-  {end:'2026-08-03',kcal:2000,p:200,c:155,f:64,name:'W8-9 衝刺'},
+  {end:'2026-08-03',kcal:2000,p:200,c:155,f:64,name:'W8-9 衝刺',
+    high:{kcal:2150,p:200,c:170,f:74},low:{kcal:1850,p:200,c:60,f:90}},
 ];
 function getTarget(dateStr){
   const ds=dateStr||todayStr();
@@ -2415,9 +2461,11 @@ function renderFoodHistory(dates){
     const tot=getDayTotals(date);
     const rows=foods.map(f=>`
       <div class="an-hist-row">
-        <span>${f.name}${f.qty&&f.qty!==1?` ×${f.qty}`:''}</span>
-        <span style="color:var(--accent)">${f.kcal}kcal</span>
-        <span style="color:#ff6b6b">${f.p}g蛋白</span>
+        <span class="ahr-name">${f.name}${f.qty&&f.qty!==1?` ×${f.qty}`:''}</span>
+        <span style="color:var(--accent)">${f.kcal||0}kcal</span>
+        <span class="ahr-macro" style="color:#ff6b6b">P ${f.p||0}g</span>
+        <span class="ahr-macro" style="color:var(--muted)">C ${f.c||0}g</span>
+        <span class="ahr-macro" style="color:var(--accent3)">F ${f.f||0}g</span>
       </div>`).join('');
     return `<div class="an-hist-day">
       <div class="an-hist-head" onclick="this.nextElementSibling.classList.toggle('open')">
